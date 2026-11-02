@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function email() {
+      return request.auth.token.email.lower();
+    }
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    // Network leads: one document per lead, ID = lowercase email (leadUsers/name@gmail.com)
+    function isLead() {
+      return signedIn() && exists(/databases/$(database)/documents/leadUsers/$(email()));
+    }
+
+    // General members: allowedUsers/name@gmail.com. Leads automatically count as members.
+    function isApproved() {
+      return isLead()
+        || (signedIn() && exists(/databases/$(database)/documents/allowedUsers/$(email())));
+    }
+
+    // Members-only content (members.html)
+    match /private/{docId} {
+      allow read: if isApproved();
+      allow write: if false;
+    }
+
+    // Leads-only internal wiki (leads.html). Leads can read, create and edit pages.
+    // Deleting is only possible in the Firebase console, so nothing gets lost by accident.
+    match /leads/{pageId} {
+      allow read: if isLead();
+      allow create, update: if isLead()
+        && request.resource.data.title is string
+        && request.resource.data.content is string
+        && request.resource.data.content.size() < 500000
+        && request.resource.data.updatedBy == email();
+      allow delete: if false;
+    }
+
+    // Public team section on the Who We Are page: everyone can read, only leads can change.
+    match /team/{memberId} {
+      allow read: if true;
+      allow create, update: if isLead()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.photo is string
+        && request.resource.data.photo.size() < 400000
+        && request.resource.data.updatedBy == email();
+      allow delete: if isLead();
+    }
+    match /site/{docId} {
+      allow read: if true;
+      allow write: if isLead() && request.resource.data.updatedBy == email();
+    }
+
+    // Allowlists: nobody can read the whole list or edit it from the website.
+    match /allowedUsers/{e} {
+      allow get: if signedIn() && email() == e;
+      allow list, write: if false;
+    }
+    match /leadUsers/{e} {
+      allow get: if signedIn() && email() == e;
+      allow list, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
