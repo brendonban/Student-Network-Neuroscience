@@ -50,6 +50,23 @@
     </div>
   </main>
 
+  <!-- If the page never finishes loading, explain why instead of showing "Loading…" forever. -->
+  <script>
+    setTimeout(function () {
+      var box = document.getElementById("loading");
+      if (!box || box.classList.contains("hidden")) return;
+      var fileMode = location.protocol === "file:";
+      box.innerHTML = fileMode
+        ? '<h3 style="margin-top:0">Can\'t start from a double-clicked file</h3>' +
+          '<p>Browsers block this page when it\'s opened as a file. In this folder run <code>python3 -m http.server 8000</code> ' +
+          'and open <code>http://localhost:8000/' + location.pathname.split("/").pop() + '</code> instead.</p>'
+        : '<h3 style="margin-top:0">Couldn\'t connect to Firebase</h3>' +
+          '<p>Most likely <code>firebase-config.js</code> has a typo: it must start with <code>export const firebaseConfig = {</code> ' +
+          'and every value needs quotes and a comma. Also check that <code>projectId</code> is right.</p>' +
+          '<p>For the exact error, open the browser console (Mac: Cmd+Option+J, Windows: Ctrl+Shift+J).</p>';
+    }, 10000);
+  </script>
+
   <footer>© Student Network for Neuroscience · PsyFaKo e.V.</footer>
 
   <script type="module">
