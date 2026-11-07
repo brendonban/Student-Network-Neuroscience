@@ -1,8 +1,11 @@
+// Paste the config from Firebase Console → Project settings → Your apps → Web app.
+// These values are NOT secret; it's fine for them to be public on GitHub.
+// Security comes from firestore.rules, not from hiding this file.
 export const firebaseConfig = {
-  apiKey: "AIzaSyB29NhFWRIsah_VusADSUgoseaBKm1aQ_U",
-  authDomain: "student-network-neuroscience.firebaseapp.com",
-  projectId: "student-network-neuroscience",
-  storageBucket: "student-network-neuroscience.firebasestorage.app",
-  messagingSenderId: "609387869702",
-  appId: "1:609387869702:web:a89761960c77be2fab3587"
+  apiKey: "PASTE_HERE",
+  authDomain: "PASTE_HERE.firebaseapp.com",
+  projectId: "PASTE_HERE",
+  storageBucket: "PASTE_HERE.appspot.com",
+  messagingSenderId: "PASTE_HERE",
+  appId: "PASTE_HERE",
 };

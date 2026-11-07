@@ -54,8 +54,47 @@
     </div>
   </main>
 
+
   <footer>Internal · Student Network for Neuroscience</footer>
 
-  <script type="module" src="leads.js"></script>
+  <!-- Start-up check: if anything goes wrong, show the real reason instead of "Loading…" forever. -->
+  <script>
+    (function () {
+      var shown = false;
+      function problem(title, html) {
+        var box = document.getElementById("loading");
+        if (shown || !box || box.classList.contains("hidden")) return;
+        shown = true;
+        box.innerHTML = '<h3 style="margin-top:0">' + title + '</h3>' + html;
+      }
+      window.__bootProblem = problem;
+      var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+      if (location.protocol === "file:") {
+        problem("Can't start from a double-clicked file",
+          '<p>Browsers block this page when it\'s opened as a file. In this folder run <code>python3 -m http.server 8000</code> and open <code>http://localhost:8000/' + esc(location.pathname.split("/").pop()) + '</code>.</p>');
+      }
+      window.addEventListener("error", function (e) {
+        var file = (e.filename || "").split("/").pop();
+        problem("Something in the page code broke",
+          '<p><code>' + esc(file || "page") + '</code>: ' + esc(e.message) + '</p>' +
+          ((file === "firebase-config.js" || /firebase-config/.test(e.message)) ? '<p>Check <code>firebase-config.js</code>: it must start with <code>export const firebaseConfig = {</code>, and every value needs quotes and a comma.</p>' : '') +
+          '<p>Make sure every file from the latest zip is uploaded (only keep your own <code>firebase-config.js</code>).</p>');
+      });
+      window.addEventListener("unhandledrejection", function (e) {
+        problem("Couldn't connect to Firebase", '<p>' + esc((e.reason && e.reason.message) || e.reason) + '</p>');
+      });
+      window.__moduleFailed = function () {
+        problem("A file is missing",
+          '<p>The page couldn\'t load one of its files. Make sure <b>all</b> files from the latest zip are in the same folder, including your <code>firebase-config.js</code>.</p>' +
+          '<p>On GitHub, check the file names exactly (lowercase, no "(1)" or ".txt" added). For the exact name, open the browser console: Mac Cmd+Option+J, Windows Ctrl+Shift+J.</p>');
+      };
+      setTimeout(function () {
+        problem("Still loading after 15 seconds",
+          '<p>Firebase isn\'t answering. Check that the Firestore database exists (Firebase console → Firestore) and that <code>projectId</code> in <code>firebase-config.js</code> is right. Then reload with Cmd+Shift+R.</p>' +
+          '<p>For the exact error, open the browser console: Mac Cmd+Option+J, Windows Ctrl+Shift+J.</p>');
+      }, 15000);
+    })();
+  </script>
+  <script type="module" src="leads.js" onerror="__moduleFailed()"></script>
 </body>
 </html>
